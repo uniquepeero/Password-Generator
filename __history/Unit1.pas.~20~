@@ -1,0 +1,235 @@
+unit Unit1;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ExtCtrls, Vcl.StdCtrls,
+  Vcl.Samples.Spin, Clipbrd, Vcl.Imaging.jpeg, libeay32, Vcl.Menus;
+
+
+type
+  TPassGen = class(TForm)
+    Image1: TImage;
+    Edit1: TEdit;
+    CheckBox1: TCheckBox;
+    CheckBox2: TCheckBox;
+    CheckBox3: TCheckBox;
+    CheckBox4: TCheckBox;
+    SpinEdit1: TSpinEdit;
+    Label1: TLabel;
+    Button1: TButton;
+    Label2: TLabel;
+    CheckBox5: TCheckBox;
+    Shape1: TShape;
+    Label3: TLabel;
+    CheckBox6: TCheckBox;
+    CheckBox7: TCheckBox;
+    Edit2: TEdit;
+    Label4: TLabel;
+    Label5: TLabel;
+    Image2: TImage;
+    MainMenu1: TMainMenu;
+    procedure CheckBox1Click(Sender: TObject);
+    procedure CheckBox2Click(Sender: TObject);
+    procedure CheckBox3Click(Sender: TObject);
+    procedure CheckBox4Click(Sender: TObject);
+    procedure Button1Click(Sender: TObject);
+    procedure Edit1Change(Sender: TObject);
+    procedure Image1Click(Sender: TObject);
+    procedure CheckBox5Click(Sender: TObject);
+    procedure CheckBox6Click(Sender: TObject);
+    procedure CheckBox7Click(Sender: TObject);
+    procedure Image2Click(Sender: TObject);
+    procedure LoadSSL;
+    procedure FreeSSL;
+
+  private
+
+  public
+
+  end;
+
+const
+  str = 'abcdefghijklmnopqrstuvwxyz';
+  bigstr = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  numb = '1234567890';
+  symb = '!@#$%^&*()"''\\/|~`?<>,.;:{}[]';
+  rstr = 'ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÜÛÝÞß';
+  rbigstr = 'àáâãäåæçèéêëìíîïðñòóôõö÷øùúüûýþÿ';
+
+
+var
+  PassGen: TPassGen;
+  str_, bigStr_, numb_, symb_, rstr_, rbigstr_: boolean ;
+  res: string;
+
+
+
+implementation
+
+{$R *.dfm}
+
+procedure TPassGen.LoadSSL;
+begin
+  OpenSSL_add_all_algorithms;
+  OpenSSL_add_all_ciphers;
+  OpenSSL_add_all_digests;
+  ERR_load_crypto_strings;
+  ERR_load_RSA_strings;
+end;
+
+procedure TPassGen.FreeSSL;
+begin
+  EVP_cleanup;
+  ERR_free_strings;
+end;
+
+procedure TPassGen.CheckBox1Click(Sender: TObject);
+
+begin
+  if CheckBox1.Checked then str_:= true
+  else str_:= false;
+
+end;
+
+procedure TPassGen.CheckBox2Click(Sender: TObject);
+begin
+  if CheckBox2.Checked then bigStr_:= true
+  else bigStr_:= false;
+end;
+
+procedure TPassGen.CheckBox3Click(Sender: TObject);
+begin
+  if CheckBox3.Checked then symb_:= true
+  else symb_:= false;
+end;
+
+procedure TPassGen.CheckBox4Click(Sender: TObject);
+begin
+  if CheckBox4.Checked then numb_:= true
+  else numb_:= false;
+end;
+
+procedure TPassGen.CheckBox5Click(Sender: TObject);
+begin
+  CheckBox5.Checked:=true;
+end;
+
+procedure TPassGen.CheckBox6Click(Sender: TObject);
+begin
+   if CheckBox6.Checked then rstr_:= true
+   else rstr_:= false;
+end;
+
+procedure TPassGen.CheckBox7Click(Sender: TObject);
+begin
+    if CheckBox7.Checked then rbigstr_:= true
+    else rbigstr_:= false;
+end;
+
+procedure TPassGen.Edit1Change(Sender: TObject);
+begin
+  edit1.SelectAll;
+end;
+
+procedure TPassGen.Image1Click(Sender: TObject);
+begin
+  Clipboard.AsText := Edit1.Text;
+  CheckBox5.Visible:= true;
+  Shape1.Visible:=true;
+end;
+
+procedure TPassGen.Image2Click(Sender: TObject);
+var
+  f: textfile;
+begin
+  assignfile(f, 'pass.txt');
+  rewrite(f);
+  writeln(f, res);
+  //writeln(f, hash);
+  closefile(f);
+end;
+
+procedure TPassGen.Button1Click(Sender: TObject);
+var
+  strCount, bigStrCount, symbCount, numbCount, rStrCount, rBigStrCount: integer;
+begin
+  LoadSSL;
+  FreeSSL;
+  CheckBox5.Visible:=false;
+  Shape1.Visible:=false;
+  randomize;
+  res:= '';
+  strCount:= 0; bigStrCount:= 0; symbCount:= 0;
+  numbCount:= 0; rStrCount:= 0; rBigStrCount:= 0;
+  while (length(res) < SpinEdit1.Value) do begin
+    case (Random(6)+1) of
+    1: if str_ then begin
+          if ((strCount - (bigStrCount or symbCount or numbCount{ or rStrCount or rBigStrCount})) >= 1 )
+             and (length(res) <> 0) then  continue; //res:=res+' ';
+          res:=res+str[random(26)+1];
+          inc(strCount);
+       end;
+    2: if bigStr_ then begin
+          if (((bigStrCount - strCount) >= 1) or ((bigStrCount - symbCount) >= 1) or ((bigStrCount - numbCount) >= 1))
+             and (length(res) <> 0) then continue; //res:=res+' ';  //or goto while
+          res:= res + bigStr[random(26) + 1];
+          inc(bigStrCount);
+       end;
+    3: if symb_ then begin
+          if (((symbCount - strCount) >= 1) or ((symbCount - bigStrCount) >= 1) or ((symbCount - numbCount) >= 1)){ or rStrCount or rBigStrCount}
+             and (length(res) <> 0) then continue; //res:=res+' ';
+          res:= res + symb[random(30) + 1];
+          inc(symbCount);
+       end;
+    4: if numb_ then begin
+          if ((numbCount - (strCount or symbCount or bigStrCount{ or rStrCount or rBigStrCount})) >= 1 )
+             and (length(res) <> 0) then continue;//res:=res+' ';
+          res:= res + numb[random(10) + 1];
+          inc(numbCount);
+       end;
+    5: if rstr_ then begin
+          res:= res + rstr[random(32) + 1];
+          inc(rStrCount);
+       end;
+    6: if rbigstr_ then begin
+          res:= res + rbigstr[random(32) + 1];
+          inc(rBigStrCount);
+       end;
+    end;
+  end;
+  edit1.Text:=res;
+end;
+{begin
+        if (a > (b or c or d)) and not((a = 0) and (b = 0) and (c = 0) and (d = 0)) then break
+        else begin }
+
+
+{function OpenaSSL_md5(const source:ansistring):AnsiString;
+var
+  _md5:md5_ctx;
+  i:Byte;
+  Hash:array[0..MD5_DIGEST_LENGTH] of AnsiChar;
+begin
+  if MD5_Init(@_md5)<>1 then exit;
+
+  MD5_Update(@_md5, @source[1], Length(source));
+  MD5_Final(@Hash, @_md5);
+
+  for i:=0 to MD5_DIGEST_LENGTH-1 do
+    result:=result+IntToHex(Ord(Hash[I]), 2);
+
+  result:=AnsiLowerCase(result);
+end;     }
+
+
+begin
+  randomize;
+  str_:=true;
+  bigStr_:=true;
+  symb_:=true;
+  numb_:=true;
+  rstr_:= false;
+  rbigstr_:= false;
+end.

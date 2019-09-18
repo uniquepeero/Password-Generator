@@ -1,0 +1,217 @@
+unit Unit1;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ExtCtrls, Vcl.StdCtrls,
+  Vcl.Samples.Spin, Clipbrd, Vcl.Imaging.jpeg, Vcl.Imaging.pngimage;
+
+type
+  TPassGen = class(TForm)
+    Image1: TImage;
+    Edit1: TEdit;
+    CheckBox1: TCheckBox;
+    CheckBox2: TCheckBox;
+    CheckBox3: TCheckBox;
+    CheckBox4: TCheckBox;
+    SpinEdit1: TSpinEdit;
+    Label1: TLabel;
+    Button1: TButton;
+    Label2: TLabel;
+    CheckBox5: TCheckBox;
+    Label3: TLabel;
+    CheckBox6: TCheckBox;
+    CheckBox7: TCheckBox;
+    Edit2: TEdit;
+    Label4: TLabel;
+    Label5: TLabel;
+    CheckBox8: TCheckBox;
+    Image2: TImage;
+    Image3: TImage;
+    Image4: TImage;
+    SpinEdit2: TSpinEdit;
+    Memo1: TMemo;
+    procedure CheckBox1Click(Sender: TObject);
+    procedure CheckBox2Click(Sender: TObject);
+    procedure CheckBox3Click(Sender: TObject);
+    procedure CheckBox4Click(Sender: TObject);
+    procedure Button1Click(Sender: TObject);
+    procedure Edit1Change(Sender: TObject);
+    procedure Image1Click(Sender: TObject);
+    procedure CheckBox5Click(Sender: TObject);
+    procedure CheckBox6Click(Sender: TObject);
+    procedure CheckBox7Click(Sender: TObject);
+    procedure Image2Click(Sender: TObject);
+    procedure HashGen(source: string);
+    function PwdGen(aLength: byte): string;
+
+
+  private
+
+  public
+
+  end;
+
+const
+  STR = 'abcdefghijklmnopqrstuvwxyz';
+  BIGSTR = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  NUMB = '1234567890';
+  SYMB = '!@#$%^&*()"''\\/|~`?<>,.;:{}[]';
+  RSTR = 'ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÜÛÝÞß';
+  RBIGSTR = 'àáâãäåæçèéêëìíîïðñòóôõö÷øùúüûýþÿ';
+
+
+var
+  PassGen: TPassGen;
+  str_, bigStr_, numb_, symb_, rstr_, rbigstr_: boolean ;
+  res, hash: string;
+
+
+
+implementation
+
+{$R *.dfm}
+
+procedure TPassGen.CheckBox1Click(Sender: TObject);
+
+begin
+  if CheckBox1.Checked then str_:= true
+  else str_:= false;
+
+end;
+
+procedure TPassGen.CheckBox2Click(Sender: TObject);
+begin
+  if CheckBox2.Checked then bigStr_:= true
+  else bigStr_:= false;
+end;
+
+procedure TPassGen.CheckBox3Click(Sender: TObject);
+begin
+  if CheckBox3.Checked then symb_:= true
+  else symb_:= false;
+end;
+
+procedure TPassGen.CheckBox4Click(Sender: TObject);
+begin
+  if CheckBox4.Checked then numb_:= true
+  else numb_:= false;
+end;
+
+procedure TPassGen.CheckBox5Click(Sender: TObject);
+begin
+  CheckBox5.Checked:=true;
+end;
+
+procedure TPassGen.CheckBox6Click(Sender: TObject);
+begin
+   if CheckBox6.Checked then rstr_:= true
+   else rstr_:= false;
+end;
+
+procedure TPassGen.CheckBox7Click(Sender: TObject);
+begin
+    if CheckBox7.Checked then rbigstr_:= true
+    else rbigstr_:= false;
+end;
+
+procedure TPassGen.Edit1Change(Sender: TObject);
+begin
+  edit1.SelectAll;
+end;
+
+procedure TPassGen.Image1Click(Sender: TObject);
+begin
+  Clipboard.AsText := Edit1.Text;
+  CheckBox5.Visible:= true;
+  Image1.Visible:=false;
+  Image3.Visible:=true;
+end;
+
+procedure TPassGen.Image2Click(Sender: TObject);
+var
+  f: textfile;
+begin
+  CheckBox8.Visible:= true;
+  Image4.Visible:=true;
+  Image2.Visible:=false;
+  assignfile(f, 'pass.txt');
+  rewrite(f);
+  writeln(f, res);
+  writeln(f, hash);
+  closefile(f);
+end;
+
+function TPassGen.PwdGen(aLength: byte): string;
+begin
+  randomize;
+  res:= '';
+  while (length(res) < aLength) do begin
+    case (Random(6)+1) of
+    1: if str_ then
+          res:=res + STR[random(length(STR))+1];
+
+    2: if bigStr_ then
+          res:= res + BIGSTR[random(length(BIGSTR)) + 1];
+
+    3: if symb_ then
+          res:= res + SYMB[random(length(SYMB)) + 1];
+
+    4: if numb_ then
+          res:= res + NUMB[random(length(NUMB)) + 1];
+
+    5: if rstr_ then
+          res:= res + RSTR[random(length(RSTR)) + 1];
+
+    6: if rbigstr_ then
+          res:= res + RBIGSTR[random(length(RBIGSTR)) + 1];
+
+    end;
+  end;
+end;
+
+procedure TPassGen.Button1Click(Sender: TObject);
+
+begin
+  CheckBox5.Visible:=false;
+  Image1.Visible:=true;
+  Image2.Visible:=true;
+  Image3.Visible:=false;
+  Image4.Visible:=false;
+  CheckBox8.Visible:= false;
+  {if length(res) <> SpinEdit1.Value then
+    PwdGen;}
+
+  HashGen(res);
+ // edit1.Text:= res;
+  //memo1.Text:=IntToStr(length(res));
+  Memo1.Lines.Add(PwdGen(SpinEdit1.Value));
+end;
+
+procedure TPassGen.HashGen(source: string);
+var
+   i, lngth: integer;
+begin
+   hash:= '';
+   lngth:= length(source);
+   if lngth mod 2 = 0 then begin
+      for I := 0 to lngth-2 do
+        hash:=hash + (IntToStr(ord(source[i]) xor ord(source[i+1])));
+   end
+   else begin
+      for I := 0 to lngth - 3 do
+        hash:= hash + (IntToStr(ord(source[i]) xor ord(source[i+1])));
+      hash:= hash + (IntToStr(ord(source[lngth-1]) xor ord(source[lngth-2])));
+   end;
+   edit2.Text:=hash;
+end;
+
+begin
+  str_:= true;
+  bigStr_:= true;
+  symb_:= true;
+  numb_:= true;
+  rstr_:= false;
+  rbigstr_:= false;
+end.
